@@ -11,12 +11,14 @@ def add_gems
   gem 'faker', '~> 2.11'
 end
 
+generate "controller", "home index"
+
 def add_users
   generate "devise:install"
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }",
               env: 'development'
 
-  route "root to: 'home#index'"
+  # route "root to: 'home#index'"
   generate :devise, "User", "username", "name", "admin:boolean"
 
   in_root do
@@ -29,10 +31,55 @@ def copy_templates
   directory "app", force: true
 end
 
+def add_react_native
+
+end
+
 def add_react
-  inpu_text = 'heart'
-  @posts = `node heart.js #{inpu_text}`
-  puts @posts
+  `npx create-react-app #{app_name}_web &&
+   cd #{app_name}_web &&
+   yarn add react-router-dom axios
+   mkdir public/images
+   mv public/favicon.ico public/images/favicon.ico
+   mkdir src/images
+   mkdir src/stylesheets
+   mkdir src/views
+   mkdir src/views/home
+   touch src/views/home/index.js
+   mv src/logo.svg src/images/logo.svg
+   mv src/index.css src/stylesheets/index.css
+   mv src/App.css src/stylesheets/App.css
+   mv src/App.js src/views/App.jsx
+   mv src/App.test.js src/views/App.test.js
+  `
+
+  content = <<-JS
+import React from 'react';
+
+const Index = () => {
+  return (
+    <div className="jumbotron">
+      <h1>Home page</h1>
+    </div>
+  );
+}
+
+export default Index;
+   JS
+
+   content1 = <<-JS
+     import App from './views/App'
+   JS
+
+   content2 = <<-JS
+     import {BrowserRouter as Router, Route, NavLink, Switch} from 'react-router-dom'
+   JS
+
+  insert_into_file "#{app_name}_web/src/views/home/index.js", "#{content}\n\n"
+  insert_into_file "#{app_name}_web/src/index.js", "#{content1}"
+  insert_into_file "#{app_name}_web/src/views/App.jsx", "#{content2}"
+
+  # `node flash.js #{app_name}.web`
 end
 
 def add_sidekiq
@@ -54,6 +101,46 @@ def add_foreman
   copy_file "Procfile"
 end
 
+def add_root
+  File.open('config/initializers/routes.rb', 'r+') do |file|
+    file.each_line.to_a
+    file[10] = root to: 'home#index'
+    file.rewind
+    file.write(lines.join)
+  end
+end
+
+def remove_comments
+  File.open('config/initializers/cors.rb', 'r+') do |file|
+  lines = file.each_line.to_a
+  lines[7][0]  = ""
+  lines[8][0]  = ""
+  lines[9][0]  = ""
+  lines[10][0] = ""
+  lines[11][0] = ""
+  lines[12][0] = ""
+  lines[13][0] = ""
+  lines[14][0] = ""
+  lines[15][0] = ""
+  file.rewind
+  file.write(lines.join)
+end
+
+#   cors = <<-RUBY
+# Rails.application.config.middleware.insert_before 0, Rack::Cors do
+#   allow do
+#     origins 'http://localhost:3000'
+#     resource '*', :headers => :any, :methods => [:get, :post, :put, :patch, :delete, :options]
+#   end
+# end
+# RUBY
+
+  # insert_into_file 'config/initializers/cors.rb', "#{cors}\n\n\n\n"
+  # route "root to: 'home#index'"
+  insert_into_file 'Procfile', "web: cd #{app_name} && PORT=3000 yarn start"
+end
+
+
 source_paths
 
 add_gems
@@ -61,10 +148,10 @@ add_gems
 after_bundle do
   add_users
   add_sidekiq
+  add_react
   add_foreman
   copy_templates
-
-  # Migrate
+  remove_comments
   rails_command "db:create"
   rails_command "db:migrate"
 
