@@ -9,6 +9,7 @@ def add_gems
   gem 'pry-rails', '~> 0.3.9'
   gem 'awesome_print', '~> 1.8'
   gem 'faker', '~> 2.11'
+  gem 'rack-cors'
 end
 
 generate "controller", "home index"
@@ -18,7 +19,6 @@ def add_users
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }",
               env: 'development'
 
-  # route "root to: 'home#index'"
   generate :devise, "User", "username", "name", "admin:boolean"
 
   in_root do
@@ -31,8 +31,50 @@ def copy_templates
   directory "app", force: true
 end
 
-def add_react_native
+def add_sidekiq
+  environment "config.active_job.queue_adapter = :sidekiq"
 
+  insert_into_file "config/routes.rb",
+    "require 'sidekiq/web'\n\n",
+    before: "Rails.application.routes.draw do"
+
+  content = <<-RUBY
+    authenticate :user, lambda { |u| u.admin? } do
+      mount Sidekiq::Web => '/sidekiq'
+    end
+  RUBY
+  insert_into_file "config/routes.rb", "#{content}\n\n", after: "Rails.application.routes.draw do\n"
+
+  File.open('config/routes.rb', 'r+') do |file|
+    lines = file.each_line.to_a
+    lines[9] = "  root 'home#index'"
+    file.rewind
+    file.write(lines.join)
+  end
+
+end
+
+def add_foreman
+  copy_file "Procfile"
+end
+
+def remove_comments
+  File.open('config/initializers/cors.rb', 'r+') do |file|
+    lines = file.each_line.to_a
+    lines[7][0]  = " "
+    lines[8][0]  = " "
+    lines[9][0]  = "      origins 'http://localhost:3000'"
+    lines[10][0] = " "
+    lines[11][0] = " "
+    lines[12][0] = " "
+    lines[13][0] = " "
+    lines[14][0] = " "
+    lines[15][0] = " "
+    file.rewind
+    file.write(lines.join)
+  end
+
+  insert_into_file 'Procfile', "web: cd #{app_name}_web && PORT=3000 yarn start"
 end
 
 def add_react
@@ -45,11 +87,13 @@ def add_react
    mkdir src/stylesheets
    mkdir src/views
    mkdir src/views/home
-   touch src/views/home/index.js
+   touch src/views/home/Index.js
    mv src/logo.svg src/images/logo.svg
-   mv src/index.css src/stylesheets/index.css
+   rm -R src/index.css
+   touch src/stylesheets/index.css
    mv src/App.css src/stylesheets/App.css
-   mv src/App.js src/views/App.jsx
+   rm -R src/App.js
+   touch src/views/App.js
    mv src/App.test.js src/views/App.test.js
   `
 
@@ -67,77 +111,73 @@ const Index = () => {
 export default Index;
    JS
 
-   content1 = <<-JS
-     import App from './views/App'
-   JS
+  insert_into_file "#{app_name}_web/src/views/home/Index.js", "#{content}\n\n"
 
-   content2 = <<-JS
-     import {BrowserRouter as Router, Route, NavLink, Switch} from 'react-router-dom'
-   JS
+  content1 = <<-JS
+  import React, { Component } from 'react';
+  import {BrowserRouter as Router, Route, NavLink, Switch} from 'react-router-dom';
 
-  insert_into_file "#{app_name}_web/src/views/home/index.js", "#{content}\n\n"
-  insert_into_file "#{app_name}_web/src/index.js", "#{content1}"
-  insert_into_file "#{app_name}_web/src/views/App.jsx", "#{content2}"
+  import Index from './home/Index';
+  import logo from '../images/logo.svg';
+  import '../stylesheets/App.css';
+
+  const Navigation = () => (
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <ul className="navbar-nav mr-auto">
+        <li className="nav-item"><NavLink exact className="nav-link" activeClassName="active" to="/">Home</NavLink></li>
+        <li className="nav-item"><NavLink exact className="nav-link" activeClassName="active" to="/articles">Articles</NavLink></li>
+      </ul>
+    </nav>
+  );
+
+  class App extends Component {
+    render() {
+      return (
+        <div className="App">
+          <Router>
+            <div className="container">
+              <Navigation />
+              <Main />
+            </div>
+          </Router>
+        </div>
+      );
+    }
+  }
+
+  const Main = () => (
+    <Switch>
+      <Route exact path="/" component={Index} />
+    </Switch>
+  );
+
+  export default App;
+  JS
+
+  insert_into_file "#{app_name}_web/src/views/App.js", "#{content1}\n\n"
+
+
+`
+   const fs = require('fs')
+   const someFile = #{app_name}_web/src/index.js
+   fs.readFile(someFile, 'utf8', function (err, data) {
+     if (err) {
+       return console.log(err);
+     }
+     let result = data.replace('./App', './views/App');
+     let result1 = data.replace('./index.css', './stylesheets/index.css');
+
+     fs.writeFile(someFile, result, 'utf8', function (err) {
+        if (err) return console.log(err);
+     });
+
+     fs.writeFile(someFile, result1, 'utf8', function (err) {
+        if (err) return console.log(err);
+     });
+   });
+`
 
   # `node flash.js #{app_name}.web`
-end
-
-def add_sidekiq
-  environment "config.active_job.queue_adapter = :sidekiq"
-
-  insert_into_file "config/routes.rb",
-    "require 'sidekiq/web'\n\n",
-    before: "Rails.application.routes.draw do"
-
-  content = <<-RUBY
-    authenticate :user, lambda { |u| u.admin? } do
-      mount Sidekiq::Web => '/sidekiq'
-    end
-  RUBY
-  insert_into_file "config/routes.rb", "#{content}\n\n", after: "Rails.application.routes.draw do\n"
-end
-
-def add_foreman
-  copy_file "Procfile"
-end
-
-def add_root
-  File.open('config/initializers/routes.rb', 'r+') do |file|
-    file.each_line.to_a
-    file[10] = root to: 'home#index'
-    file.rewind
-    file.write(lines.join)
-  end
-end
-
-def remove_comments
-  File.open('config/initializers/cors.rb', 'r+') do |file|
-  lines = file.each_line.to_a
-  lines[7][0]  = ""
-  lines[8][0]  = ""
-  lines[9][0]  = ""
-  lines[10][0] = ""
-  lines[11][0] = ""
-  lines[12][0] = ""
-  lines[13][0] = ""
-  lines[14][0] = ""
-  lines[15][0] = ""
-  file.rewind
-  file.write(lines.join)
-end
-
-#   cors = <<-RUBY
-# Rails.application.config.middleware.insert_before 0, Rack::Cors do
-#   allow do
-#     origins 'http://localhost:3000'
-#     resource '*', :headers => :any, :methods => [:get, :post, :put, :patch, :delete, :options]
-#   end
-# end
-# RUBY
-
-  # insert_into_file 'config/initializers/cors.rb', "#{cors}\n\n\n\n"
-  # route "root to: 'home#index'"
-  insert_into_file 'Procfile', "web: cd #{app_name} && PORT=3000 yarn start"
 end
 
 
@@ -148,12 +188,12 @@ add_gems
 after_bundle do
   add_users
   add_sidekiq
-  add_react
   add_foreman
   copy_templates
-  remove_comments
   rails_command "db:create"
   rails_command "db:migrate"
+  remove_comments
+  add_react
 
   git :init
   git add: "."
