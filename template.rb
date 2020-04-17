@@ -63,7 +63,7 @@ def remove_comments
     lines = file.each_line.to_a
     lines[7][0]  = " "
     lines[8][0]  = " "
-    lines[9][0]  = "      origins 'http://localhost:3000'"
+    lines[9]     = "      origins 'http://localhost:3000'"
     lines[10][0] = " "
     lines[11][0] = " "
     lines[12][0] = " "
@@ -81,6 +81,7 @@ def add_react
   `npx create-react-app #{app_name}_web &&
    cd #{app_name}_web &&
    yarn add react-router-dom axios
+   touch flash.js
    mkdir public/images
    mv public/favicon.ico public/images/favicon.ico
    mkdir src/images
@@ -156,28 +157,7 @@ export default Index;
 
   insert_into_file "#{app_name}_web/src/views/App.js", "#{content1}\n\n"
 
-
-`
-   const fs = require('fs')
-   const someFile = #{app_name}_web/src/index.js
-   fs.readFile(someFile, 'utf8', function (err, data) {
-     if (err) {
-       return console.log(err);
-     }
-     let result = data.replace('./App', './views/App');
-     let result1 = data.replace('./index.css', './stylesheets/index.css');
-
-     fs.writeFile(someFile, result, 'utf8', function (err) {
-        if (err) return console.log(err);
-     });
-
-     fs.writeFile(someFile, result1, 'utf8', function (err) {
-        if (err) return console.log(err);
-     });
-   });
-`
-
-  # `node flash.js #{app_name}.web`
+  `node flash.js #{app_name}`
 end
 
 
