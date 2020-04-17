@@ -81,7 +81,6 @@ def add_react
   `npx create-react-app #{app_name}_web &&
    cd #{app_name}_web &&
    yarn add react-router-dom axios
-   touch flash.js
    mkdir public/images
    mv public/favicon.ico public/images/favicon.ico
    mkdir src/images
@@ -94,6 +93,8 @@ def add_react
    touch src/stylesheets/index.css
    mv src/App.css src/stylesheets/App.css
    rm -R src/App.js
+   rm -R src/index.js
+   touch src/index.js
    touch src/views/App.js
    mv src/App.test.js src/views/App.test.js
   `
@@ -157,7 +158,20 @@ export default Index;
 
   insert_into_file "#{app_name}_web/src/views/App.js", "#{content1}\n\n"
 
-  `node flash.js #{app_name}`
+  content2 = <<-JS
+  import React from 'react';
+  import ReactDOM from 'react-dom';
+  import './stylesheets/index.css';
+  import App from './views/App';
+  import * as serviceWorker from './serviceWorker';
+
+  ReactDOM.render(<React.StrictMode><App /></React.StrictMode>,document.getElementById('root'));
+
+  serviceWorker.unregister();
+  JS
+
+  insert_into_file "#{app_name}_web/src/index.js", "#{content2}\n\n"
+  # `node flash.js #{app_name}`
 end
 
 
