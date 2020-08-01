@@ -2,6 +2,7 @@ def source_paths
   [File.expand_path(File.dirname(__FILE__))]
 end
 
+
 def add_gems
   gem 'devise', '~> 4.7', '>= 4.7.1'
   gem 'sidekiq', '~> 6.0', '>= 6.0.6'
@@ -175,9 +176,11 @@ export default Index;
 end
 
 
+
 source_paths
 
 add_gems
+
 
 after_bundle do
   add_users
@@ -193,12 +196,10 @@ after_bundle do
   git add: "."
   git commit: %Q{ -m "Initial commit" }
 
-  say
-  say "Kickoff app successfully created! 👍", :green
-  say
-  say "Switch to your app by running:"
-  say "$ cd #{app_name}", :yellow
-  say
-  say "Then run:"
-  say "$ rails server", :green
+  # say "Kickoff app successfully created! 👍", :green
+  # say "Switch to your app by running:"
+  # say "$ cd #{app_name}", :yellow
+  # say
+  # say "Then run:"
+  # say "foreman start", :green
 end
