@@ -199,5 +199,4 @@ after_bundle do
   say "Kickoff app successfully created! 👍", :green
   say "Then run:"
   # say "foreman start", :green
-  run "foreman start"
 end
