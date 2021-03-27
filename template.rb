@@ -6,11 +6,23 @@ end
 def add_gems
   gem 'devise', '~> 4.7', '>= 4.7.1'
   gem 'sidekiq', '~> 6.0', '>= 6.0.6'
-  gem 'pry', '~> 0.13.0'
-  gem 'pry-rails', '~> 0.3.9'
-  gem 'awesome_print', '~> 1.8'
-  gem 'faker', '~> 2.11'
+  gem 'dotenv-rails'
+  gem 'olive_branch'
   gem 'rack-cors'
+end
+
+def add_development_gems
+  content = <<-RUBY
+gem 'pry', '~> 0.13.0'
+  gem 'pry-rails', '~> 0.3.9'
+  gem 'amazing_print'
+  gem 'faker', '~> 2.11'
+  gem 'rubocop-rails', '~> 2.8', '>= 2.8.1', require: false
+  RUBY
+
+
+
+  inject_into_file "Gemfile", "  #{content}\n", :before => /^  gem 'spring'/
 end
 
 generate "controller", "home index"
@@ -32,6 +44,18 @@ def copy_templates
   directory "app", force: true
 end
 
+def add_olive_branch
+  content = <<-RUBY
+  excluded_routes = ->(env) { !env["PATH_INFO"].match(%r{^/api}) }
+    config.middleware.use OliveBranch::Middleware,
+                        inflection:       "camel",
+                        exclude_params:   excluded_routes,
+                        exclude_response: excluded_routes
+  RUBY
+
+  inject_into_file "config/application.rb", "  #{content}\n", :before => /^  end/
+end
+
 def add_sidekiq
   environment "config.active_job.queue_adapter = :sidekiq"
 
@@ -44,6 +68,7 @@ def add_sidekiq
       mount Sidekiq::Web => '/sidekiq'
     end
   RUBY
+
   insert_into_file "config/routes.rb", "#{content}\n\n", after: "Rails.application.routes.draw do\n"
 
   File.open('config/routes.rb', 'r+') do |file|
@@ -177,8 +202,9 @@ end
 
 
 
+gsub_file('Gemfile', /^\s*#.*\n/, '')
 source_paths
-
+add_development_gems
 add_gems
 
 
@@ -190,6 +216,7 @@ after_bundle do
   rails_command "db:create"
   rails_command "db:migrate"
   remove_comments
+  add_olive_branch
   add_react
 
   git :init
