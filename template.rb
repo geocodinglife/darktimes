@@ -2,13 +2,13 @@ def source_paths
   [File.expand_path(File.dirname(__FILE__))]
 end
 
-
 def add_gems
   gem 'devise', '~> 4.7', '>= 4.7.1'
   gem 'sidekiq', '~> 6.0', '>= 6.0.6'
   gem 'dotenv-rails'
   gem 'olive_branch'
   gem 'rack-cors'
+  gem 'active_model_serializers'
 end
 
 def add_development_gems
@@ -19,8 +19,6 @@ gem 'pry', '~> 0.13.0'
   gem 'faker', '~> 2.11'
   gem 'rubocop-rails', '~> 2.8', '>= 2.8.1', require: false
   RUBY
-
-
 
   inject_into_file "Gemfile", "  #{content}\n", :before => /^  gem 'spring'/
 end
@@ -101,6 +99,14 @@ def remove_comments
   end
 
   insert_into_file 'Procfile', "web: cd #{app_name}_web && PORT=3000 yarn start"
+end
+
+def create_config_file
+  copy_file '.rubocop.yml', '.rubocop.yml'
+end
+
+def create_env_file
+  copy_file '.env.example', '.env.example'
 end
 
 def add_react
@@ -200,13 +206,12 @@ export default Index;
   # `node flash.js #{app_name}`
 end
 
-
-
 gsub_file('Gemfile', /^\s*#.*\n/, '')
 source_paths
+create_config_file
+create_env_file
 add_development_gems
 add_gems
-
 
 after_bundle do
   add_users
