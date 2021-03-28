@@ -98,7 +98,7 @@ def remove_comments
     file.write(lines.join)
   end
 
-  insert_into_file 'Procfile', "web: cd #{app_name}_web && PORT=3000 yarn start"
+  # insert_into_file 'Procfile', "web: cd #{app_name}_web && PORT=3000 yarn start"
 end
 
 def create_config_file
@@ -195,11 +195,11 @@ export default Index;
   import ReactDOM from 'react-dom';
   import './stylesheets/index.css';
   import App from './views/App';
-  import * as serviceWorker from './serviceWorker';
+  import reportWebVitals from './reportWebVitals';
 
   ReactDOM.render(<React.StrictMode><App /></React.StrictMode>,document.getElementById('root'));
 
-  serviceWorker.unregister();
+  reportWebVitals();
   JS
 
   insert_into_file "#{app_name}_web/src/index.js", "#{content2}\n\n"
