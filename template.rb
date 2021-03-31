@@ -9,6 +9,7 @@ def add_gems
   gem 'olive_branch'
   gem 'rack-cors'
   gem 'active_model_serializers'
+  gem 'jwt'
 end
 
 def add_development_gems
