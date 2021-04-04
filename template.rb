@@ -114,6 +114,8 @@ def add_react
   `npx create-react-app #{app_name}_web &&
    cd #{app_name}_web &&
    yarn add react-router-dom axios
+   yarn add -D tailwindcss@npm:@tailwindcss/postcss7-compat @tailwindcss/postcss7-compat postcss@^7 autoprefixer@^9
+   yarn add @craco/craco
    mkdir public/images
    mv public/favicon.ico public/images/favicon.ico
    mkdir src/images
@@ -150,6 +152,18 @@ export default Index;
   copy_file 'Router.jsx', "#{app_name}_web/src/routes/Router.jsx"
   copy_file 'routes.js', "#{app_name}_web/src/routes/routes.js"
   copy_file 'App.js', "#{app_name}_web/src/App.js"
+  copy_file 'craco.config.js', "#{app_name}_web/craco.config.js"
+  copy_file 'tailwind.config.js', "#{app_name}_web/tailwind.config.js"
+
+
+content1 = <<-JS
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+   JS
+
+  insert_into_file "#{app_name}_web/src/stylesheets/index.css", "#{content1}\n\n"
+
 end
 
 gsub_file('Gemfile', /^\s*#.*\n/, '')
