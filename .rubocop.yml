@@ -2,7 +2,7 @@ require: rubocop-rails
 
 AllCops:
   NewCops: enable
-  TargetRubyVersion: 2.7.1
+  TargetRubyVersion: 2.7.2
   Exclude:
     - lib/email_validator.rb
     - 'spec/**/*'
