@@ -9,6 +9,7 @@ def add_gems
   gem 'olive_branch'
   gem 'rack-cors'
   gem 'active_model_serializers'
+  gem 'jwt'
 end
 
 def add_development_gems
@@ -118,20 +119,18 @@ def add_react
    mkdir src/images
    mkdir src/stylesheets
    mkdir src/views
-   mkdir src/views/home
-   touch src/views/home/Index.js
+   mkdir src/views/Home
+   touch src/views/Home/index.jsx
+   mkdir src/routes
    mv src/logo.svg src/images/logo.svg
    rm -R src/index.css
+   rm -R src/index.js
+   rm -R src/App.js
    touch src/stylesheets/index.css
    mv src/App.css src/stylesheets/App.css
-   rm -R src/App.js
-   rm -R src/index.js
-   touch src/index.js
-   touch src/views/App.js
-   mv src/App.test.js src/views/App.test.js
   `
 
-  content = <<-JS
+content = <<-JS
 import React from 'react';
 
 const Index = () => {
@@ -145,65 +144,12 @@ const Index = () => {
 export default Index;
    JS
 
-  insert_into_file "#{app_name}_web/src/views/home/Index.js", "#{content}\n\n"
+  insert_into_file "#{app_name}_web/src/views/Home/index.jsx", "#{content}\n\n"
 
-  content1 = <<-JS
-  import React, { Component } from 'react';
-  import {BrowserRouter as Router, Route, NavLink, Switch} from 'react-router-dom';
-
-  import Index from './home/Index';
-  import logo from '../images/logo.svg';
-  import '../stylesheets/App.css';
-
-  const Navigation = () => (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-      <ul className="navbar-nav mr-auto">
-        <li className="nav-item"><NavLink exact className="nav-link" activeClassName="active" to="/">Home</NavLink></li>
-        <li className="nav-item"><NavLink exact className="nav-link" activeClassName="active" to="/articles">Articles</NavLink></li>
-      </ul>
-    </nav>
-  );
-
-  class App extends Component {
-    render() {
-      return (
-        <div className="App">
-          <Router>
-            <div className="container">
-              <Navigation />
-              <Main />
-            </div>
-          </Router>
-        </div>
-      );
-    }
-  }
-
-  const Main = () => (
-    <Switch>
-      <Route exact path="/" component={Index} />
-    </Switch>
-  );
-
-  export default App;
-  JS
-
-  insert_into_file "#{app_name}_web/src/views/App.js", "#{content1}\n\n"
-
-  content2 = <<-JS
-  import React from 'react';
-  import ReactDOM from 'react-dom';
-  import './stylesheets/index.css';
-  import App from './views/App';
-  import reportWebVitals from './reportWebVitals';
-
-  ReactDOM.render(<React.StrictMode><App /></React.StrictMode>,document.getElementById('root'));
-
-  reportWebVitals();
-  JS
-
-  insert_into_file "#{app_name}_web/src/index.js", "#{content2}\n\n"
-  # `node flash.js #{app_name}`
+  copy_file 'index.js', "#{app_name}_web/src/index.js"
+  copy_file 'Router.jsx', "#{app_name}_web/src/routes/Router.jsx"
+  copy_file 'routes.js', "#{app_name}_web/src/routes/routes.js"
+  copy_file 'App.js', "#{app_name}_web/src/App.js"
 end
 
 gsub_file('Gemfile', /^\s*#.*\n/, '')
