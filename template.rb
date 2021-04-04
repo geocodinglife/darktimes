@@ -111,62 +111,12 @@ def create_env_file
 end
 
 def add_react
-  `npx create-react-app #{app_name}_web &&
-   cd #{app_name}_web &&
-   yarn add react-router-dom axios
-   yarn add -D tailwindcss@npm:@tailwindcss/postcss7-compat @tailwindcss/postcss7-compat postcss@^7 autoprefixer@^9
-   yarn add @craco/craco
-   mkdir public/images
-   mv public/favicon.ico public/images/favicon.ico
-   mkdir src/images
-   mkdir src/stylesheets
-   mkdir src/views
-   mkdir src/views/Home
-   touch src/views/Home/index.jsx
-   mkdir src/routes
-   mv src/logo.svg src/images/logo.svg
-   rm -R src/index.css
-   rm -R src/index.js
-   rm -R src/App.js
-   touch src/stylesheets/index.css
-   mv src/App.css src/stylesheets/App.css
-  `
-
-content = <<-JS
-import React from 'react';
-
-const Index = () => {
-  return (
-    <div className="jumbotron">
-      <h1>Home page</h1>
-    </div>
-  );
-}
-
-export default Index;
-   JS
-
-  insert_into_file "#{app_name}_web/src/views/Home/index.jsx", "#{content}\n\n"
-
-  copy_file 'index.js', "#{app_name}_web/src/index.js"
-  copy_file 'Router.jsx', "#{app_name}_web/src/routes/Router.jsx"
-  copy_file 'routes.js', "#{app_name}_web/src/routes/routes.js"
-  copy_file 'App.js', "#{app_name}_web/src/App.js"
-  copy_file 'craco.config.js', "#{app_name}_web/craco.config.js"
-  copy_file 'tailwind.config.js', "#{app_name}_web/tailwind.config.js"
-
-
-content1 = <<-JS
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-   JS
-
-  insert_into_file "#{app_name}_web/src/stylesheets/index.css", "#{content1}\n\n"
-
+  directory 'super-duper-template', "#{app_name}_web"
+ ` cd #{app_name}_web --template cra-template && yarn install`
 end
 
 gsub_file('Gemfile', /^\s*#.*\n/, '')
+
 source_paths
 create_config_file
 create_env_file
